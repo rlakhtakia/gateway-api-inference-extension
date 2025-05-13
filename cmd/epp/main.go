@@ -17,12 +17,14 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -32,6 +34,8 @@ import (
 	healthPb "google.golang.org/grpc/health/grpc_health_v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/leaderelection"
+	rlock "k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/component-base/metrics/legacyregistry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -105,7 +109,10 @@ var (
 	loraInfoMetric = flag.String("loraInfoMetric",
 		"vllm:lora_requests_info",
 		"Prometheus metric for the LoRA info metrics (must be in vLLM label format).")
-
+	// // high availability mode
+	// enableMultipleReplicas = flag.Bool("multiple-replicas", false, "Enable multiple replicas for controller manager. Enabling this will ensure the controller manager is running with high availability.")
+	// lockName needs to be shared across all running instances
+	lockName = "epp-leader-election-lock"
 	setupLog = ctrl.Log.WithName("setup")
 )
 
@@ -140,6 +147,29 @@ func run() error {
 	cfg, err := ctrl.GetConfig()
 	if err != nil {
 		setupLog.Error(err, "Failed to get rest config")
+		return err
+	}
+
+	// Define the unique ID for this instance
+	identity, err := os.Hostname()
+	if err != nil {
+		setupLog.Error(err, "Failed to get hostname for ID")
+		return err
+	}
+
+	// Create a new lock. This will be used to create a Lease resource in the cluster.
+	lock, err := rlock.NewFromKubeconfig(
+		rlock.LeasesResourceLock,
+		*poolNamespace,
+		lockName,
+		rlock.ResourceLockConfig{
+			Identity: identity,
+		},
+		cfg,
+		time.Second*10,
+	)
+	if err != nil {
+		setupLog.Error(err, "Failed to create lock for leader election")
 		return err
 	}
 
@@ -204,13 +234,43 @@ func run() error {
 		return err
 	}
 
-	// Start the manager. This blocks until a signal is received.
-	setupLog.Info("Controller manager starting")
-	if err := mgr.Start(ctx); err != nil {
-		setupLog.Error(err, "Error starting controller manager")
+	callbacks := leaderelection.LeaderCallbacks{
+		OnStartedLeading: func(ctx context.Context) {
+			// Start the manager. This blocks until a signal is received.
+			setupLog.Info("Controller manager starting")
+			if err := mgr.Start(ctx); err != nil {
+				setupLog.Error(err, "Error starting controller manager")
+				os.Exit(1)
+			}
+			setupLog.Info("Controller manager terminated")
+		},
+		OnStoppedLeading: func() {
+			setupLog.Info("No longer the leader, stopping services.")
+			// This will cause the process to exit, and Kubernetes will reschedule it.
+			os.Exit(1)
+		},
+		OnNewLeader: func(identity string) {
+			setupLog.Info("New leader elected", "leader", identity)
+		},
+	}
+
+	el, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
+		Lock:          lock,
+		LeaseDuration: time.Second * 15,
+		RenewDeadline: time.Second * 10,
+		RetryPeriod:   time.Second * 2,
+		Name:          lockName,
+		Callbacks:     callbacks,
+	})
+	if err != nil {
+		setupLog.Error(err, "Failed to initialize leader election")
 		return err
 	}
-	setupLog.Info("Controller manager terminated")
+
+	setupLog.Info("Starting leader election process...")
+	el.Run(ctx)
+
+	setupLog.Info("epp application exited after leader election process.")
 	return nil
 }
 

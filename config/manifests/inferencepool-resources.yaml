@@ -35,7 +35,7 @@ metadata:
   labels:
     app: vllm-llama3-8b-instruct-epp
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: vllm-llama3-8b-instruct-epp
@@ -48,7 +48,7 @@ spec:
       terminationGracePeriodSeconds: 130
       containers:
       - name: epp
-        image: us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension/epp:main
+        image: us-central1-docker.pkg.dev/rlakhtakia-gke-dev/gateway/epp-controller:latest
         imagePullPolicy: Always
         args:
         - -poolName

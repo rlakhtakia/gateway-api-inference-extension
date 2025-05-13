@@ -1,11 +1,14 @@
 inferenceExtension:
-  replicas: 1
+  replicas: 3
   image:
     name: epp
-    hub: us-central1-docker.pkg.dev/k8s-staging-images/gateway-api-inference-extension
+    hub: us-central1-docker.pkg.dev/rlakhtakia-gke-dev/gateway
     tag: main
     pullPolicy: Always
   extProcPort: 9002
+  leaderElection:
+    enabled: true
+    lockName: epp-leader-election-lock
 
 inferencePool:
   targetPortNumber: 8000
