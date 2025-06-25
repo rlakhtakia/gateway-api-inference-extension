@@ -110,6 +110,7 @@ func TestSchedule(t *testing.T) {
 								},
 							},
 						},
+						FallbackPods: []*types.ScoredPod{},
 					},
 				},
 				PrimaryProfileName: "default",

@@ -49,11 +49,12 @@ func TestSchedulePlugins(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		profile        *SchedulerProfile
-		input          []backendmetrics.PodMetrics
-		wantTargetPod  k8stypes.NamespacedName
-		targetPodScore float64
+		name             string
+		profile          *SchedulerProfile
+		input            []backendmetrics.PodMetrics
+		wantTargetPod    k8stypes.NamespacedName
+		wantFallbackPods []*types.ScoredPod
+		targetPodScore   float64
 		// Number of expected pods to score (after filter)
 		numPodsToScore int
 		err            bool
@@ -70,7 +71,16 @@ func TestSchedulePlugins(t *testing.T) {
 				&backendmetrics.FakePodMetrics{Pod: &backend.Pod{NamespacedName: k8stypes.NamespacedName{Name: "pod2"}}},
 				&backendmetrics.FakePodMetrics{Pod: &backend.Pod{NamespacedName: k8stypes.NamespacedName{Name: "pod3"}}},
 			},
-			wantTargetPod:  k8stypes.NamespacedName{Name: "pod1"},
+			wantTargetPod: k8stypes.NamespacedName{Name: "pod1"},
+			wantFallbackPods: []*types.ScoredPod{
+				{
+					Pod: &types.PodMetrics{Pod: &backend.Pod{
+						NamespacedName: k8stypes.NamespacedName{Name: "pod2"},
+						Labels:         map[string]string{},
+					}},
+					Score: 1.1,
+				},
+			},
 			targetPodScore: 1.1,
 			numPodsToScore: 2,
 			err:            false,
@@ -87,7 +97,16 @@ func TestSchedulePlugins(t *testing.T) {
 				&backendmetrics.FakePodMetrics{Pod: &backend.Pod{NamespacedName: k8stypes.NamespacedName{Name: "pod2"}}},
 				&backendmetrics.FakePodMetrics{Pod: &backend.Pod{NamespacedName: k8stypes.NamespacedName{Name: "pod3"}}},
 			},
-			wantTargetPod:  k8stypes.NamespacedName{Name: "pod1"},
+			wantTargetPod: k8stypes.NamespacedName{Name: "pod1"},
+			wantFallbackPods: []*types.ScoredPod{
+				{
+					Pod: &types.PodMetrics{Pod: &backend.Pod{
+						NamespacedName: k8stypes.NamespacedName{Name: "pod2"},
+						Labels:         map[string]string{},
+					}},
+					Score: 50,
+				},
+			},
 			targetPodScore: 50,
 			numPodsToScore: 2,
 			err:            false,
@@ -145,7 +164,8 @@ func TestSchedulePlugins(t *testing.T) {
 				Pod: &backend.Pod{NamespacedName: test.wantTargetPod, Labels: make(map[string]string)},
 			}
 			wantRes := &types.ProfileRunResult{
-				TargetPod: wantPod,
+				TargetPod:    wantPod,
+				FallbackPods: test.wantFallbackPods,
 			}
 
 			if diff := cmp.Diff(wantRes, got); diff != "" {
@@ -230,16 +250,20 @@ func (tp *testPlugin) Score(_ context.Context, _ *types.CycleState, _ *types.LLM
 func (tp *testPlugin) Pick(_ context.Context, _ *types.CycleState, scoredPods []*types.ScoredPod) *types.ProfileRunResult {
 	tp.PickCallCount++
 	tp.NumOfPickerCandidates = len(scoredPods)
+	fallbackPods := []*types.ScoredPod{}
 
 	var winnerPod types.Pod
 	for _, scoredPod := range scoredPods {
 		if scoredPod.GetPod().NamespacedName.String() == tp.PickRes.String() {
 			winnerPod = scoredPod.Pod
 			tp.WinnderPodScore = scoredPod.Score
+		} else {
+			fallbackPods = append(fallbackPods, scoredPod)
 		}
+
 	}
 
-	return &types.ProfileRunResult{TargetPod: winnerPod}
+	return &types.ProfileRunResult{TargetPod: winnerPod, FallbackPods: fallbackPods}
 }
 
 func (tp *testPlugin) PostCycle(_ context.Context, _ *types.CycleState, res *types.ProfileRunResult) {
