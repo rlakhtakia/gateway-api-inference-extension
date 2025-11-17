@@ -3,6 +3,7 @@ job:
     repository: quay.io/inference-perf/inference-perf
     tag: "latest" # Defaults to .Chart.AppVersion
   serviceAccountName: ""
+  gsaEmail: ""
   nodeSelector: {}
   # Example resources:
   # resources:
