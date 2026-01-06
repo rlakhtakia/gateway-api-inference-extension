@@ -1,32 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: vllm-llama3-8b-instruct
+  name: qwen32-instruct
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: vllm-llama3-8b-instruct
+      app: qwen32-instruct
   template:
     metadata:
       labels:
-        app: vllm-llama3-8b-instruct
+        app: qwen32-instruct
     spec:
       containers:
         - name: vllm
-          image: "vllm/vllm-openai:v0.12.0"
+          image: "vllm/vllm-openai:v0.11.0"
           imagePullPolicy: Always
           command: ["python3", "-m", "vllm.entrypoints.openai.api_server"]
           args:
           - "--model"
-          - "meta-llama/Llama-3.1-8B-Instruct"
+          - "Qwen/Qwen3-32B"
           - "--tensor-parallel-size"
-          - "1"
+          - "2"
           - "--port"
           - "8000"
           - "--max-num-seq"
           - "1024"
-          - "--optimization-level"
+          - "--compilation-config"
           - "3"
           - "--enable-lora"
           - "--max-loras"
@@ -240,18 +240,18 @@ spec:
           emptyDir: {}
         - name: config-volume
           configMap:
-            name: vllm-llama3-8b-instruct-adapters
+            name: qwen32-instruct-adapters
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: vllm-llama3-8b-instruct-adapters
+  name: qwen32-instruct-adapters
 data:
   configmap.yaml: |
       vLLMLoRAConfig:
-        name: vllm-llama3-8b-instruct-adapters
+        name: qwen32-instruct-adapters
         port: 8000
-        defaultBaseModel: meta-llama/Llama-3.1-8B-Instruct
+        defaultBaseModel: Qwen/Qwen3-32B
         ensureExist:
           models:
           - id: food-review-1
