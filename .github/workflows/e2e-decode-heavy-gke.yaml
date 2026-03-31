@@ -290,7 +290,6 @@ jobs:
             --set "config.storage.google_cloud_storage.path=${NAMESPACE}/${TIMESTAMP}" \
             --set "gcsPath=${GCS_BUCKET}/datasets/infinity_instruct.json" \
             --set "config.data.path=/gcsDataset/gcs-dataset.json" \
-            --set-string 'job.resources.limits.nvidia\.com/gpu=1'
 
       - name: Wait for benchmarking job to finish
         run: |

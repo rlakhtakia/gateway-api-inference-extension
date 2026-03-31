@@ -292,7 +292,6 @@ jobs:
             --set config.data.shared_prefix.system_prompt_len=2048 \
             --set config.data.shared_prefix.question_len=512 \
             --set config.data.shared_prefix.output_len=256 \
-            --set-string 'job.resources.limits.nvidia\.com/gpu=1'
 
       - name: Wait for benchmarking job to finish
         run: |
