@@ -28,7 +28,7 @@ import (
 )
 
 // GroupName specifies the group name used to register the objects.
-const GroupName = "inference.networking.k8s.io"
+const GroupName = "inference.poc.k8s.io"
 
 // GroupVersion specifies the group and the version used to register the objects.
 var GroupVersion = metav1.GroupVersion{Group: GroupName, Version: "v1"}

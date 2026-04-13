@@ -1,6 +1,41 @@
+{{- /* 1. Default EPP Context */ -}}
+{{- $defaultValues := deepCopy .Values.inferenceExtension -}}
+{{- $defaultName := $defaultValues.name | default (printf "%s-epp" .Release.Name) -}}
+{{- $_ := set $defaultValues "name" $defaultName -}}
+{{- $defaultCtx := dict "Values" (dict "inferenceExtension" $defaultValues "inferencePool" .Values.inferencePool "provider" .Values.provider) "Release" .Release "Chart" .Chart "Capabilities" .Capabilities "Template" .Template "name" $defaultName -}}
+
+{{- /* 2. Preferred EPP Context (if enabled) */ -}}
+{{- $preferredValues := dict -}}
+{{- $preferredName := "" -}}
+{{- $preferredCtx := dict -}}
+{{- if .Values.inferenceExtensionPreferred.enabled -}}
+  {{- $preferredValues = deepCopy .Values.inferenceExtension -}}
+  {{- if .Values.inferenceExtensionPreferred -}}
+    {{- $preferredValues = merge .Values.inferenceExtensionPreferred .Values.inferenceExtension -}}
+  {{- end -}}
+  {{- $preferredName = $preferredValues.name | default (printf "%s-epp-preferred" .Release.Name) -}}
+  {{- $_ := set $preferredValues "name" $preferredName -}}
+  {{- $preferredCtx = dict "Values" (dict "inferenceExtension" $preferredValues "inferencePool" .Values.inferencePool "provider" .Values.provider) "Release" .Release "Chart" .Chart "Capabilities" .Capabilities "Template" .Template "name" $preferredName -}}
+{{- end -}}
+
+{{- /* Resources for Default EPP */ -}}
+{{- with $defaultCtx -}}
 {{ include "inference-extension.config" . }}
 {{ include "inference-extension.deployment" . }}
-{{ include "inference-extension.lead-election-rbac" . }}
+{{ include "inference-extension.rbac" . }}
 {{ include "inference-extension.sa-token-secret" . }}
 {{ include "inference-extension.service" . }}
 {{ include "inference-extension.service-monitor" . }}
+{{- end -}}
+
+{{- /* Resources for Preferred EPP */ -}}
+{{- if .Values.inferenceExtensionPreferred.enabled -}}
+{{- with $preferredCtx -}}
+{{ include "inference-extension.config" . }}
+{{ include "inference-extension.deployment" . }}
+{{ include "inference-extension.rbac" . }}
+{{ include "inference-extension.sa-token-secret" . }}
+{{ include "inference-extension.service" . }}
+{{ include "inference-extension.service-monitor" . }}
+{{- end -}}
+{{- end -}}

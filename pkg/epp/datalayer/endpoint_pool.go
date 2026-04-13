@@ -21,11 +21,14 @@ import (
 )
 
 type EndpointPool struct {
-	Selector    map[string]string
-	TargetPorts []int
-	Namespace   string
-	Name        string
-	AppProtocol v1.AppProtocol
+	Selector                map[string]string
+	TargetPorts             []int
+	Namespace               string
+	Name                    string
+	AppProtocol             v1.AppProtocol
+	EndpointPickerRef       *v1.EndpointPickerRef
+	EndpointPickerPreferred *v1.EndpointPickerRef
+	Preference              string
 }
 
 // NewEndpointPool creates and returns a new empty instance of EndpointPool.

@@ -1,4 +1,6 @@
 {{- if eq (lower .Values.provider.name) "gke" }}
+{{- $defaultValues := deepCopy .Values.inferenceExtension -}}
+{{- $defaultName := $defaultValues.name | default (printf "%s-epp" .Release.Name) -}}
 ---
 kind: HealthCheckPolicy
 apiVersion: networking.gke.io/v1
@@ -9,9 +11,9 @@ metadata:
     {{- include "gateway-api-inference-extension.labels" . | nindent 4 }}
 spec:
   targetRef:
-    group: inference.networking.k8s.io
+    group: inference.networking.x-k8s.io
     kind: InferencePool
-    name: {{ .Release.Name }}
+    name: {{ .Release.Name }}-standard
   default:
     # Set a more aggressive health check than the default 5s for faster switch
     # over during EPP rollout.
@@ -39,19 +41,45 @@ spec:
 apiVersion: networking.gke.io/v1
 kind: GCPBackendPolicy
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ .Release.Name }}-default
   namespace: {{ .Release.Namespace }}
-  labels:
-    {{- include "gateway-api-inference-extension.labels" . | nindent 4 }}
 spec:
   targetRef:
-    group: inference.networking.k8s.io
-    kind: InferencePool
-    name: {{ .Release.Name }}
+    group: ""
+    kind: Service
+    name: {{ $defaultName }}
   default:
-    timeoutSec: 300    # 5-minute timeout (adjust as needed)
+    timeoutSec: 300
     logging:
-      enabled: true    # log all requests by default
+      enabled: true
+    {{- if .Values.inferenceExtensionPreferred.enabled }}
+    backendPreference: DEFAULT
+    {{- end }}
+
+---
+{{- if .Values.inferenceExtensionPreferred.enabled }}
+  {{- $preferredValues := deepCopy .Values.inferenceExtension -}}
+  {{- if .Values.inferenceExtensionPreferred }}
+    {{- $preferredValues = merge .Values.inferenceExtensionPreferred .Values.inferenceExtension -}}
+  {{- end -}}
+  {{- $preferredName := $preferredValues.name | default (printf "%s-epp-preferred" .Release.Name) -}}
+---
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: {{ .Release.Name }}-preferred
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetRef:
+    group: ""
+    kind: Service
+    name: {{ $preferredName }}
+  default:
+    timeoutSec: 300
+    logging:
+      enabled: true
+    backendPreference: PREFERRED
+{{- end }}
 ---
 {{- end }}
 {{- include "inference-extension.gke" . -}}

@@ -56,11 +56,98 @@ spec:
                 - http
                 - kubernetes.io/h2c
                 type: string
+              endpointPickerPreferred:
+                description: |-
+                  EndpointPickerPreferred is a reference to the Preferred Endpoint Picker extension
+                  and its associated configuration.
+                properties:
+                  endpointPreference:
+                    default: DEFAULT
+                    description: Preference describes the preference for EndpointPicker.
+                    enum:
+                    - DEFAULT
+                    - PREFERRED
+                    type: string
+                  failureMode:
+                    default: FailClose
+                    description: |-
+                      FailureMode configures how the parent handles the case when the Endpoint Picker extension
+                      is non-responsive. When unspecified, defaults to "FailClose".
+                    enum:
+                    - FailOpen
+                    - FailClose
+                    type: string
+                  group:
+                    default: ""
+                    description: |-
+                      Group is the group of the referent API object. When unspecified, the default value
+                      is "", representing the Core API group.
+                    maxLength: 253
+                    minLength: 0
+                    pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                    type: string
+                  kind:
+                    default: Service
+                    description: |-
+                      Kind is the Kubernetes resource kind of the referent.
+
+                      Required if the referent is ambiguous, e.g. service with multiple ports.
+
+                      Defaults to "Service" when not specified.
+
+                      ExternalName services can refer to CNAME DNS records that may live
+                      outside of the cluster and as such are difficult to reason about in
+                      terms of conformance. They also may not be safe to forward to (see
+                      CVE-2021-25740 for more information). Implementations MUST NOT
+                      support ExternalName Services.
+                    maxLength: 63
+                    minLength: 1
+                    pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
+                    type: string
+                  name:
+                    description: Name is the name of the referent API object.
+                    maxLength: 253
+                    minLength: 1
+                    type: string
+                  port:
+                    description: |-
+                      Port is the port of the Endpoint Picker extension service.
+
+                      Port is required when the referent is a Kubernetes Service. In this
+                      case, the port number is the service port number, not the target port.
+                      For other resources, destination port might be derived from the referent
+                      resource or this field.
+                    properties:
+                      number:
+                        description: |-
+                          Number defines the port number to access the selected model server Pods.
+                          The number must be in the range 1 to 65535.
+                        format: int32
+                        maximum: 65535
+                        minimum: 1
+                        type: integer
+                    required:
+                    - number
+                    type: object
+                required:
+                - name
+                type: object
+                x-kubernetes-validations:
+                - message: port is required when kind is 'Service' or unspecified
+                    (defaults to 'Service')
+                  rule: self.kind != 'Service' || has(self.port)
               endpointPickerRef:
                 description: |-
                   EndpointPickerRef is a reference to the Endpoint Picker extension and its
                   associated configuration.
                 properties:
+                  endpointPreference:
+                    default: DEFAULT
+                    description: Preference describes the preference for EndpointPicker.
+                    enum:
+                    - DEFAULT
+                    - PREFERRED
+                    type: string
                   failureMode:
                     default: FailClose
                     description: |-

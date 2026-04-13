@@ -30,6 +30,7 @@ var (
 		metricsutil.HelpMsgWithStability("The total number of requests pending in the model server queue for each underlying pod.", compbasemetrics.ALPHA),
 		[]string{
 			"name",
+			"endpoint_preference",
 			"model_server_pod",
 		}, nil,
 	)
@@ -73,6 +74,7 @@ func (c *inferencePoolMetricsCollector) Collect(ch chan<- prometheus.Metric) {
 			prometheus.GaugeValue,
 			float64(pod.GetMetrics().WaitingQueueSize),
 			pool.Name,
+			pool.Preference,
 			pod.GetMetadata().NamespacedName.Name,
 		)
 	}

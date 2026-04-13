@@ -34,6 +34,8 @@ const (
 	ObjectiveKey = "x-gateway-inference-objective"
 	// ModelNameRewriteKey is the header key used to specify the model name to be used when the request is forwarded to the model server.
 	ModelNameRewriteKey = "x-gateway-model-name-rewrite"
+	// EndpointPreferenceKey is the header key used to specify the preference of the endpoint picker that served the request.
+	EndpointPreferenceKey = "x-gateway-endpoint-preference"
 
 	// DefaultFairnessID is the default fairness ID used when no ID is provided in the request.
 	// This ensures that requests without explicit fairness identifiers are still grouped and managed by the Flow Control

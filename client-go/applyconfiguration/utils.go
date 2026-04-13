@@ -35,25 +35,7 @@ import (
 // apply configuration type exists for the given GroupVersionKind.
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
-	// Group=inference.networking.k8s.io, Version=v1
-	case v1.SchemeGroupVersion.WithKind("EndpointPickerRef"):
-		return &apiv1.EndpointPickerRefApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("InferencePool"):
-		return &apiv1.InferencePoolApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("InferencePoolSpec"):
-		return &apiv1.InferencePoolSpecApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("InferencePoolStatus"):
-		return &apiv1.InferencePoolStatusApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("LabelSelector"):
-		return &apiv1.LabelSelectorApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("ParentReference"):
-		return &apiv1.ParentReferenceApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("ParentStatus"):
-		return &apiv1.ParentStatusApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("Port"):
-		return &apiv1.PortApplyConfiguration{}
-
-		// Group=inference.networking.x-k8s.io, Version=v1alpha1
+	// Group=inference.networking.x-k8s.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithKind("ExportingCluster"):
 		return &apixv1alpha1.ExportingClusterApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("ImportController"):
@@ -86,6 +68,24 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &apixv1alpha2.PoolObjectReferenceApplyConfiguration{}
 	case v1alpha2.SchemeGroupVersion.WithKind("TargetModel"):
 		return &apixv1alpha2.TargetModelApplyConfiguration{}
+
+		// Group=inference.poc.k8s.io, Version=v1
+	case v1.SchemeGroupVersion.WithKind("EndpointPickerRef"):
+		return &apiv1.EndpointPickerRefApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("InferencePool"):
+		return &apiv1.InferencePoolApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("InferencePoolSpec"):
+		return &apiv1.InferencePoolSpecApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("InferencePoolStatus"):
+		return &apiv1.InferencePoolStatusApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("LabelSelector"):
+		return &apiv1.LabelSelectorApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ParentReference"):
+		return &apiv1.ParentReferenceApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("ParentStatus"):
+		return &apiv1.ParentStatusApplyConfiguration{}
+	case v1.SchemeGroupVersion.WithKind("Port"):
+		return &apiv1.PortApplyConfiguration{}
 
 	}
 	return nil

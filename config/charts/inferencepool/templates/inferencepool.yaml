@@ -1,15 +1,35 @@
 {{ include "gateway-api-inference-extension.validations.inferencepool.common" $ }}
-apiVersion: "inference.networking.k8s.io/v1"
+{{- /* 1. Default EPP Context */ -}}
+{{- $defaultValues := deepCopy .Values.inferenceExtension -}}
+{{- $defaultName := $defaultValues.name | default (printf "%s-epp" .Release.Name) -}}
+{{- $_ := set $defaultValues "name" $defaultName -}}
+{{- $defaultCtx := dict "Values" (dict "inferenceExtension" $defaultValues "inferencePool" .Values.inferencePool) "Release" .Release "Chart" .Chart "Capabilities" .Capabilities "Template" .Template "name" $defaultName -}}
+
+{{- /* 2. Preferred EPP Context (if enabled) */ -}}
+{{- $preferredValues := dict -}}
+{{- $preferredName := "" -}}
+{{- $preferredCtx := dict -}}
+{{- if .Values.inferenceExtensionPreferred.enabled -}}
+  {{- $preferredValues = deepCopy .Values.inferenceExtension -}}
+  {{- if .Values.inferenceExtensionPreferred -}}
+    {{- $preferredValues = merge .Values.inferenceExtensionPreferred .Values.inferenceExtension -}}
+  {{- end -}}
+  {{- $preferredName = $preferredValues.name | default (printf "%s-epp-preferred" .Release.Name) -}}
+  {{- $_ := set $preferredValues "name" $preferredName -}}
+  {{- $preferredCtx = dict "Values" (dict "inferenceExtension" $preferredValues "inferencePool" .Values.inferencePool) "Release" .Release "Chart" .Chart "Capabilities" .Capabilities "Template" .Template "name" $preferredName -}}
+{{- end -}}
+
+apiVersion: {{ .Values.inferencePool.apiVersion | default "inference.networking.k8s.io/v1" }}
 kind: InferencePool
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "gateway-api-inference-extension.labels" . | nindent 4 }}
+    {{- include "gateway-api-inference-extension.labels" $defaultCtx | nindent 4 }}
 spec:
   targetPorts:
     {{- range .Values.inferencePool.targetPorts }}
-      - number: {{ .number }}
+    - number: {{ .number }}
     {{- end }}
   {{- if eq .Values.inferencePool.modelServerProtocol "grpc" }}
   appProtocol: "kubernetes.io/h2c"
@@ -24,7 +44,16 @@ spec:
       {{- end }}
       {{- end }}
   endpointPickerRef:
-    name: {{ include "gateway-api-inference-extension.name" . }}
+    name: {{ $defaultName }}
     port:
-      number: {{ .Values.inferenceExtension.extProcPort | default 9002 }}
-    failureMode: {{ .Values.inferenceExtension.failureMode | default "FailOpen" }}
+      number: {{ $defaultValues.extProcPort | default 9002 }}
+    failureMode: {{ $defaultValues.failureMode | default "FailOpen" }}
+    endpointPreference: DEFAULT
+  {{- if .Values.inferenceExtensionPreferred.enabled }}
+  endpointPickerPreferred:
+    name: {{ $preferredName }}
+    port:
+      number: {{ $preferredValues.extProcPort | default 9002 }}
+    failureMode: {{ $preferredValues.failureMode | default "FailOpen" }}
+    endpointPreference: PREFERRED
+  {{- end }}

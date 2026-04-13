@@ -12,8 +12,12 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 Inference extension name
 */}}
 {{- define "gateway-api-inference-extension.name" -}}
+{{- if .name -}}
+{{ .name }}
+{{- else -}}
 {{- $base := .Release.Name | default "default-pool" | lower | trim | trunc 40 -}}
 {{ $base }}-epp
+{{- end -}}
 {{- end -}}
 
 {{/*

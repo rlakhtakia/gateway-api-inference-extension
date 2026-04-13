@@ -61,7 +61,8 @@ type ExtProcServerRunner struct {
 	Director                         *requestcontrol.Director
 	Parser                           fwkrh.Parser
 	SaturationDetector               fwkflowcontrol.SaturationDetector
-	UseExperimentalDatalayerV2       bool // Pluggable data layer feature flag
+	UseExperimentalDatalayerV2       bool   // Pluggable data layer feature flag
+	EndpointPickerPreference         string // Preference of this endpoint picker instance (DEFAULT or PREFERRED).
 }
 
 // NewDefaultExtProcServerRunner creates a runner with default values.
@@ -87,6 +88,7 @@ func NewDefaultExtProcServerRunner() *ExtProcServerRunner {
 		HealthChecking:                   opts.HealthChecking,
 		RefreshPrometheusMetricsInterval: opts.RefreshPrometheusMetricsInterval,
 		MetricsStalenessThreshold:        opts.MetricsStalenessThreshold,
+		EndpointPickerPreference:         opts.EndpointPickerPreference,
 		// Dependencies can be assigned later.
 	}
 }
@@ -96,8 +98,9 @@ func (r *ExtProcServerRunner) SetupWithManager(mgr ctrl.Manager) error {
 	// Create the controllers and register them with the manager
 	if r.ControllerCfg.startCrdReconcilers {
 		if err := (&controller.InferencePoolReconciler{
-			Datastore: r.Datastore,
-			Reader:    mgr.GetClient(),
+			Datastore:                r.Datastore,
+			Reader:                   mgr.GetClient(),
+			EndpointPickerPreference: r.EndpointPickerPreference,
 		}).SetupWithManager(mgr); err != nil {
 			return fmt.Errorf("failed setting up InferencePoolReconciler - %w", err)
 		}

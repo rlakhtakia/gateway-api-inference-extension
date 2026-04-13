@@ -120,3 +120,48 @@ func TestEndpointTargetPorts(t *testing.T) {
 		})
 	}
 }
+
+func TestEndpointPickerPreference(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []string
+		expected string
+	}{
+		{
+			name:     "Default value",
+			args:     []string{},
+			expected: "DEFAULT",
+		},
+		{
+			name:     "Explicit DEFAULT",
+			args:     []string{"--endpoint-picker-preference", "DEFAULT"},
+			expected: "DEFAULT",
+		},
+		{
+			name:     "Explicit PREFERRED",
+			args:     []string{"--endpoint-picker-preference", "PREFERRED"},
+			expected: "PREFERRED",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fs := pflag.NewFlagSet(tt.name, pflag.ContinueOnError)
+			opts := NewOptions()
+			opts.AddFlags(fs)
+
+			argv := append([]string{"--pool-name", "test-pool"}, tt.args...)
+			if err := fs.Parse(argv); err != nil {
+				t.Fatalf("Failed to parse flags: %v", err)
+			}
+
+			if err := opts.Complete(); err != nil {
+				t.Fatalf("Complete failed: %v", err)
+			}
+
+			if opts.EndpointPickerPreference != tt.expected {
+				t.Errorf("Expected preference %q, got %q", tt.expected, opts.EndpointPickerPreference)
+			}
+		})
+	}
+}

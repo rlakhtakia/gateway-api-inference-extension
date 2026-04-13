@@ -93,7 +93,8 @@ spec:
               - --pool-namespace
               - {{ .Release.Namespace }}
               - --pool-group
-              - "inference.networking.k8s.io"
+              {{- $apiParts := split "/" .Values.inferencePool.apiVersion }}
+              - {{ $apiParts._0 | quote }}
           {{- end }}
           {{- if not .Values.inferenceExtension.latencyPredictor.enabled }}
           # Legacy metric CLI flags (skipped when dataLayer is enabled via latency predictor).
@@ -125,6 +126,7 @@ spec:
           {{- end }}
               - --zap-encoder
               - "json"
+              - --health-checking
               - --config-file
               - "/config/{{ .Values.inferenceExtension.pluginsConfigFile }}"
           {{- if gt (.Values.inferenceExtension.replicas | int) 1 }}
@@ -165,7 +167,6 @@ spec:
           {{- else }}
             grpc:
               port: 9003
-              service: inference-extension
           {{- end }}
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -177,7 +178,6 @@ spec:
           {{- else }}
             grpc:
               port: 9003
-              service: inference-extension
           {{- end }}
             periodSeconds: 2
           env:
@@ -189,6 +189,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: ENDPOINT_PICKER_PREFERENCE
+              {{- if contains "preferred" .Values.inferenceExtension.name }}
+              value: "PREFERRED"
+              {{- else }}
+              value: "DEFAULT"
+              {{- end }}
         {{- include "gateway-api-inference-extension.latencyPredictor.env" . | nindent 12 }}
         {{- if .Values.inferenceExtension.tracing.enabled }}
             - name: OTEL_SERVICE_NAME

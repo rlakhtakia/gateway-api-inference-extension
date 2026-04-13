@@ -15,10 +15,10 @@ limitations under the License.
 */
 
 // Package v1 contains API Schema definitions for the
-// inference.networking.k8s.io API group.
+// inference.poc.k8s.io API group.
 //
 // +k8s:openapi-gen=true
 // +kubebuilder:object:generate=true
-// +groupName=inference.networking.k8s.io
+// +groupName=inference.poc.k8s.io
 // +groupGoName=Inference
 package v1

@@ -31,7 +31,7 @@ type InferenceV1Interface interface {
 	InferencePoolsGetter
 }
 
-// InferenceV1Client is used to interact with features provided by the inference.networking.k8s.io group.
+// InferenceV1Client is used to interact with features provided by the inference.poc.k8s.io group.
 type InferenceV1Client struct {
 	restClient rest.Interface
 }

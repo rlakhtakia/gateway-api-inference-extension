@@ -19,6 +19,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -80,6 +81,10 @@ type Options struct {
 	SecureServing          bool   // Enables secure serving.
 	MetricsEndpointAuth    bool   // Enables authentication and authorization of the metrics endpoint.
 	//
+	// EndpointPicker role.
+	//
+	EndpointPickerPreference string // Preference of this endpoint picker instance (DEFAULT or PREFERRED).
+	//
 	// Configuration.
 	//
 	ConfigFile string // The path to the configuration file.
@@ -114,6 +119,7 @@ func NewOptions() *Options {
 		EnablePprof:                      true,
 		SecureServing:                    true,
 		MetricsEndpointAuth:              true,
+		EndpointPickerPreference:         "DEFAULT",
 	}
 }
 
@@ -122,6 +128,11 @@ func (opts *Options) AddFlags(fs *pflag.FlagSet) {
 		fs = pflag.CommandLine
 	}
 	opts.fs = fs
+
+	// Initialize from environment variable if present
+	if envVal := os.Getenv("ENDPOINT_PICKER_PREFERENCE"); envVal != "" {
+		opts.EndpointPickerPreference = envVal
+	}
 
 	fs.IntVar(&opts.GRPCPort, "grpc-port", opts.GRPCPort, "gRPC port used for communicating with Envoy proxy.")
 	fs.BoolVar(&opts.EnableLeaderElection, "ha-enable-leader-election", opts.EnableLeaderElection,
@@ -138,6 +149,8 @@ func (opts *Options) AddFlags(fs *pflag.FlagSet) {
 		"Format: a comma-separated list of numbers without whitespace (e.g., '3000,3001,3002').")
 	fs.BoolVar(&opts.DisableEndpointSubsetFilter, "disable-endpoint-subset-filter", opts.DisableEndpointSubsetFilter,
 		"Disables respecting the x-gateway-destination-endpoint-subset metadata for dispatching requests in EPP.")
+	fs.StringVar(&opts.EndpointPickerPreference, "endpoint-picker-preference", opts.EndpointPickerPreference,
+		"Preference of this endpoint picker instance (DEFAULT or PREFERRED).")
 	fs.StringVar(&opts.ModelServerMetricsScheme, "model-server-metrics-scheme", opts.ModelServerMetricsScheme,
 		"Protocol scheme used in scraping metrics from endpoints.")
 	_ = fs.MarkDeprecated("model-server-metrics-scheme", "This flag is deprecated. Configure via EndpointPickerConfig data layer plugin parameters instead.")

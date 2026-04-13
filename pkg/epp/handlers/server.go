@@ -87,6 +87,7 @@ type RequestContext struct {
 	FairnessID                string
 	ObjectiveKey              string
 	Priority                  int
+	EndpointPreference        string
 	RequestReceivedTimestamp  time.Time
 	ResponseCompleteTimestamp time.Time
 	RequestSize               int
@@ -149,6 +150,12 @@ func (s *StreamingServer) Process(srv extProcPb.ExternalProcessor_ProcessServer)
 	ctx, span := tracer.Start(ctx, "gateway.request", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
+	pool, _ := s.datastore.PoolGet()
+	var preference string
+	if pool != nil {
+		preference = pool.Preference
+	}
+
 	logger := log.FromContext(ctx)
 	loggerTrace := logger.V(logutil.TRACE)
 	loggerTrace.Info("Processing")
@@ -156,7 +163,8 @@ func (s *StreamingServer) Process(srv extProcPb.ExternalProcessor_ProcessServer)
 	// Create request context to share states during life time of an HTTP request.
 	// See https://github.com/envoyproxy/envoy/issues/17540.
 	reqCtx := &RequestContext{
-		RequestState: RequestReceived,
+		RequestState:       RequestReceived,
+		EndpointPreference: preference,
 		Request: &Request{
 			Headers:  make(map[string]string),
 			Metadata: make(map[string]any),

@@ -26,6 +26,7 @@ import (
 	logutil "sigs.k8s.io/gateway-api-inference-extension/pkg/common/observability/logging"
 
 	envoy "sigs.k8s.io/gateway-api-inference-extension/pkg/common/envoy"
+	"sigs.k8s.io/gateway-api-inference-extension/pkg/epp/metadata"
 	"sigs.k8s.io/gateway-api-inference-extension/pkg/epp/metrics"
 	"sigs.k8s.io/gateway-api-inference-extension/pkg/epp/util/request"
 )
@@ -118,6 +119,15 @@ func (s *StreamingServer) generateResponseHeaders(reqCtx *RequestContext) []*con
 				RawValue: []byte("true"),
 			},
 		},
+	}
+
+	if reqCtx.EndpointPreference != "" {
+		headers = append(headers, &configPb.HeaderValueOption{
+			Header: &configPb.HeaderValue{
+				Key:      metadata.EndpointPreferenceKey,
+				RawValue: []byte(reqCtx.EndpointPreference),
+			},
+		})
 	}
 
 	// Include any non-system-owned headers.

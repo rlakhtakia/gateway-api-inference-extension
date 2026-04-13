@@ -46,7 +46,7 @@ func InferencePool(name, namespace string) *InferencePoolApplyConfiguration {
 	b.WithName(name)
 	b.WithNamespace(namespace)
 	b.WithKind("InferencePool")
-	b.WithAPIVersion("inference.networking.k8s.io/v1")
+	b.WithAPIVersion("inference.poc.k8s.io/v1")
 	return b
 }
 

@@ -54,11 +54,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=inference.networking.k8s.io, Version=v1
-	case v1.SchemeGroupVersion.WithResource("inferencepools"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Inference().V1().InferencePools().Informer()}, nil
-
-		// Group=inference.networking.x-k8s.io, Version=v1alpha1
+	// Group=inference.networking.x-k8s.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("inferencepoolimports"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.XInference().V1alpha1().InferencePoolImports().Informer()}, nil
 
@@ -67,6 +63,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.XInference().V1alpha2().InferenceModelRewrites().Informer()}, nil
 	case v1alpha2.SchemeGroupVersion.WithResource("inferenceobjectives"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.XInference().V1alpha2().InferenceObjectives().Informer()}, nil
+
+		// Group=inference.poc.k8s.io, Version=v1
+	case v1.SchemeGroupVersion.WithResource("inferencepools"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Inference().V1().InferencePools().Informer()}, nil
 
 	}
 

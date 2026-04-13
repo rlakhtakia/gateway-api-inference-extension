@@ -55,6 +55,8 @@ type EndpointPickerRefApplyConfiguration struct {
 	// FailureMode configures how the parent handles the case when the Endpoint Picker extension
 	// is non-responsive. When unspecified, defaults to "FailClose".
 	FailureMode *apiv1.EndpointPickerFailureMode `json:"failureMode,omitempty"`
+	// Preference describes the preference for EndpointPicker.
+	Preference *apiv1.EndpointPreference `json:"endpointPreference,omitempty"`
 }
 
 // EndpointPickerRefApplyConfiguration constructs a declarative configuration of the EndpointPickerRef type for use with
@@ -100,5 +102,13 @@ func (b *EndpointPickerRefApplyConfiguration) WithPort(value *PortApplyConfigura
 // If called multiple times, the FailureMode field is set to the value of the last call.
 func (b *EndpointPickerRefApplyConfiguration) WithFailureMode(value apiv1.EndpointPickerFailureMode) *EndpointPickerRefApplyConfiguration {
 	b.FailureMode = &value
+	return b
+}
+
+// WithPreference sets the Preference field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Preference field is set to the value of the last call.
+func (b *EndpointPickerRefApplyConfiguration) WithPreference(value apiv1.EndpointPreference) *EndpointPickerRefApplyConfiguration {
+	b.Preference = &value
 	return b
 }

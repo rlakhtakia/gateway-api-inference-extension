@@ -21,10 +21,26 @@ import (
 	"sigs.k8s.io/gateway-api-inference-extension/pkg/epp/datalayer"
 )
 
-func InferencePoolToEndpointPool(inferencePool *v1.InferencePool) *datalayer.EndpointPool {
+func InferencePoolToEndpointPool(inferencePool *v1.InferencePool, preference ...string) *datalayer.EndpointPool {
 	if inferencePool == nil {
 		return nil
 	}
+	pref := ""
+	if len(preference) > 0 {
+		pref = preference[0]
+	}
+
+	// If preference is explicitly DEFAULT or PREFERRED, use it.
+	// Otherwise, if it's a name, try to match it.
+	finalPref := pref
+	if pref != "DEFAULT" && pref != "PREFERRED" && pref != "" {
+		if string(inferencePool.Spec.EndpointPickerRef.Name) == pref {
+			finalPref = string(inferencePool.Spec.EndpointPickerRef.Preference)
+		} else if inferencePool.Spec.EndpointPickerPreferred != nil && string(inferencePool.Spec.EndpointPickerPreferred.Name) == pref {
+			finalPref = string(inferencePool.Spec.EndpointPickerPreferred.Preference)
+		}
+	}
+
 	targetPorts := make([]int, 0, len(inferencePool.Spec.TargetPorts))
 	for _, p := range inferencePool.Spec.TargetPorts {
 		targetPorts = append(targetPorts, int(p.Number))
@@ -35,11 +51,14 @@ func InferencePoolToEndpointPool(inferencePool *v1.InferencePool) *datalayer.End
 		selector[string(k)] = string(v)
 	}
 	endpointPool := &datalayer.EndpointPool{
-		Selector:    selector,
-		TargetPorts: targetPorts,
-		Namespace:   inferencePool.Namespace,
-		Name:        inferencePool.Name,
-		AppProtocol: inferencePool.Spec.AppProtocol,
+		Selector:                selector,
+		TargetPorts:             targetPorts,
+		Namespace:               inferencePool.Namespace,
+		Name:                    inferencePool.Name,
+		AppProtocol:             inferencePool.Spec.AppProtocol,
+		EndpointPickerRef:       &inferencePool.Spec.EndpointPickerRef,
+		EndpointPickerPreferred: inferencePool.Spec.EndpointPickerPreferred,
+		Preference:              finalPref,
 	}
 	return endpointPool
 }

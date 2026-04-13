@@ -1,0 +1,25 @@
+apiVersion: "inference.networking.x-k8s.io/v1alpha2"
+kind: InferencePool
+metadata:
+  name: {{ .Release.Name }}-standard
+  namespace: {{ .Release.Namespace }}
+spec:
+  targetPortNumber: {{ (index .Values.inferencePool.targetPorts 0).number }}
+  selector:
+    {{- if .Values.inferencePool.modelServers.matchLabels }}
+    {{- range $key, $value := .Values.inferencePool.modelServers.matchLabels }}
+    {{ $key }}: {{ quote $value }}
+    {{- end }}
+    {{- end }}
+  extensionRef:
+    name: {{ .Release.Name }}-epp
+    portNumber: {{ .Values.inferenceExtension.extProcPort | default 9002 }}
+    failureMode: {{ .Values.inferenceExtension.failureMode | default "FailOpen" }}
+    endpointPreference: DEFAULT
+  {{- if .Values.inferenceExtensionPreferred.enabled }}
+  extensionPreferred:
+    name: {{ .Release.Name }}-epp-preferred
+    portNumber: {{ .Values.inferenceExtension.extProcPort | default 9002 }}
+    failureMode: {{ .Values.inferenceExtension.failureMode | default "FailOpen" }}
+    endpointPreference: PREFERRED
+  {{- end }}

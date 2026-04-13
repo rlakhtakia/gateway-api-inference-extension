@@ -11,9 +11,10 @@ spec:
     name: {{ include "gateway-api-inference-extension.gateway.fullname" . }}
   rules:
   - backendRefs:
-    - group: inference.networking.k8s.io
+    - group: inference.networking.x-k8s.io
       kind: InferencePool
-      name: {{ .Release.Name }}
+      name: {{ .Release.Name }}-standard
+      weight: 1
     matches:
     - path:
         type: PathPrefix

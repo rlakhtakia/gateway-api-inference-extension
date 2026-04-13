@@ -19,6 +19,8 @@ package controller
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
@@ -36,7 +38,8 @@ import (
 // will have the proper controller that will create/manage objects on behalf of the server inferencePool.
 type InferencePoolReconciler struct {
 	client.Reader
-	Datastore datastore.Datastore
+	Datastore                datastore.Datastore
+	EndpointPickerPreference string
 }
 
 func (c *InferencePoolReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -63,7 +66,23 @@ func (c *InferencePoolReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{}, nil
 	}
 
-	endpointPool := pooltuil.InferencePoolToEndpointPool(pool)
+	endpointPickerPreference := c.EndpointPickerPreference
+	if endpointPickerPreference == "" {
+		endpointPickerPreference = os.Getenv("ENDPOINT_PICKER_PREFERENCE")
+	}
+	if endpointPickerPreference == "" {
+		podName := os.Getenv("POD_NAME")
+		if podName != "" {
+			// Deployment name is usually the prefix of the pod name.
+			// vllm-qwen3-32b-epp-75599c7846-ch4z9 -> vllm-qwen3-32b-epp
+			parts := strings.Split(podName, "-")
+			if len(parts) > 2 {
+				endpointPickerPreference = strings.Join(parts[:len(parts)-2], "-")
+			}
+		}
+	}
+
+	endpointPool := pooltuil.InferencePoolToEndpointPool(pool, endpointPickerPreference)
 	if err := c.Datastore.PoolSet(ctx, c.Reader, endpointPool); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to update datastore - %w", err)
 	}

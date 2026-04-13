@@ -98,6 +98,12 @@ type InferencePoolSpec struct {
 	//
 	// +required
 	EndpointPickerRef EndpointPickerRef `json:"endpointPickerRef,omitzero"`
+
+	// EndpointPickerPreferred is a reference to the Preferred Endpoint Picker extension
+	// and its associated configuration.
+	//
+	// +optional
+	EndpointPickerPreferred *EndpointPickerRef `json:"endpointPickerPreferred,omitempty"`
 }
 
 // Port defines the network port that will be exposed by this InferencePool.
@@ -121,6 +127,18 @@ const (
 	// This protocol is typically used for gRPC workloads where TLS is terminated
 	// at the Gateway or not used within the cluster.
 	AppProtocolH2C AppProtocol = "kubernetes.io/h2c"
+)
+
+// EndpointPreference describes the preference for EndpointPicker.
+// +kubebuilder:validation:Enum=DEFAULT;PREFERRED
+type EndpointPreference string
+
+const (
+	// DefaultEndpointPreference is the default preference if nothing is specified.
+	DefaultEndpointPreference EndpointPreference = "DEFAULT"
+
+	// PreferredEndpointPreference allows inferencepool to prefer this EndpointPicker if specified.
+	PreferredEndpointPreference EndpointPreference = "PREFERRED"
 )
 
 // EndpointPickerRef specifies a reference to an Endpoint Picker extension and its
@@ -171,6 +189,12 @@ type EndpointPickerRef struct {
 	// +optional
 	// +kubebuilder:default="FailClose"
 	FailureMode EndpointPickerFailureMode `json:"failureMode,omitempty"`
+
+	// Preference describes the preference for EndpointPicker.
+	//
+	// +optional
+	// +kubebuilder:default="DEFAULT"
+	Preference EndpointPreference `json:"endpointPreference,omitempty"`
 }
 
 // EndpointPickerFailureMode defines the options for how the parent handles the case when the

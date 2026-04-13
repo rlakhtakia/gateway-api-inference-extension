@@ -50,6 +50,9 @@ type InferencePoolSpecApplyConfiguration struct {
 	// EndpointPickerRef is a reference to the Endpoint Picker extension and its
 	// associated configuration.
 	EndpointPickerRef *EndpointPickerRefApplyConfiguration `json:"endpointPickerRef,omitempty"`
+	// EndpointPickerPreferred is a reference to the Preferred Endpoint Picker extension
+	// and its associated configuration.
+	EndpointPickerPreferred *EndpointPickerRefApplyConfiguration `json:"endpointPickerPreferred,omitempty"`
 }
 
 // InferencePoolSpecApplyConfiguration constructs a declarative configuration of the InferencePoolSpec type for use with
@@ -92,5 +95,13 @@ func (b *InferencePoolSpecApplyConfiguration) WithAppProtocol(value apiv1.AppPro
 // If called multiple times, the EndpointPickerRef field is set to the value of the last call.
 func (b *InferencePoolSpecApplyConfiguration) WithEndpointPickerRef(value *EndpointPickerRefApplyConfiguration) *InferencePoolSpecApplyConfiguration {
 	b.EndpointPickerRef = value
+	return b
+}
+
+// WithEndpointPickerPreferred sets the EndpointPickerPreferred field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the EndpointPickerPreferred field is set to the value of the last call.
+func (b *InferencePoolSpecApplyConfiguration) WithEndpointPickerPreferred(value *EndpointPickerRefApplyConfiguration) *InferencePoolSpecApplyConfiguration {
+	b.EndpointPickerPreferred = value
 	return b
 }

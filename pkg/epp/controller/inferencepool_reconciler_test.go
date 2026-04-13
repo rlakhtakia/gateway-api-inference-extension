@@ -114,13 +114,17 @@ func TestInferencePoolReconciler(t *testing.T) {
 		ctx := context.Background()
 
 		ds := datastore.NewDatastore(ctx, epf, 0)
-		inferencePoolReconciler := &InferencePoolReconciler{Reader: fakeClient, Datastore: ds}
+		inferencePoolReconciler := &InferencePoolReconciler{
+			Reader:                   fakeClient,
+			Datastore:                ds,
+			EndpointPickerPreference: "PREFERRED",
+		}
 
 		// Step 1: Inception, only ready pods matching pool1 are added to the store.
 		if _, err := inferencePoolReconciler.Reconcile(ctx, req); err != nil {
 			t.Errorf("Unexpected InferencePool reconcile error: %v", err)
 		}
-		endpointPool1 := pool.InferencePoolToEndpointPool(pool1)
+		endpointPool1 := pool.InferencePoolToEndpointPool(pool1, "PREFERRED")
 		if diff := diffStore(ds, diffStoreParams{wantPool: endpointPool1, wantEndpoints: []string{"pod1-rank-0", "pod2-rank-0"}}); diff != "" {
 			t.Errorf("Unexpected diff (+got/-want): %s", diff)
 		}
@@ -138,7 +142,7 @@ func TestInferencePoolReconciler(t *testing.T) {
 		if _, err := inferencePoolReconciler.Reconcile(ctx, req); err != nil {
 			t.Errorf("Unexpected InferencePool reconcile error: %v", err)
 		}
-		newEndpointPool1 := pool.InferencePoolToEndpointPool(newPool1)
+		newEndpointPool1 := pool.InferencePoolToEndpointPool(newPool1, "PREFERRED")
 		if diff := diffStore(ds, diffStoreParams{wantPool: newEndpointPool1, wantEndpoints: []string{"pod5-rank-0"}}); diff != "" {
 			t.Errorf("Unexpected diff (+got/-want): %s", diff)
 		}
@@ -154,7 +158,7 @@ func TestInferencePoolReconciler(t *testing.T) {
 		if _, err := inferencePoolReconciler.Reconcile(ctx, req); err != nil {
 			t.Errorf("Unexpected InferencePool reconcile error: %v", err)
 		}
-		newEndpointPool1 = pool.InferencePoolToEndpointPool(newPool1)
+		newEndpointPool1 = pool.InferencePoolToEndpointPool(newPool1, "PREFERRED")
 		if diff := diffStore(ds, diffStoreParams{wantPool: newEndpointPool1, wantEndpoints: []string{"pod5-rank-0"}}); diff != "" {
 			t.Errorf("Unexpected diff (+got/-want): %s", diff)
 		}
