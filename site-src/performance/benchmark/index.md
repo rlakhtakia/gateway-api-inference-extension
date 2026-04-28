@@ -201,14 +201,16 @@ This is useful when you run benchmarks multiple times to get a more statisticall
 Refer to the inference-perf [guides](https://github.com/kubernetes-sigs/inference-perf/blob/main/docs/config.md) for a
 detailed list of configuration knobs. 
 
+All benchmarking configs are located under `gateway-api-inference-extension/benchmarking`.
+
 The following is a list of advanced configurations available.
 
-| Guide | Directory | Config(s)
-| :--- | :--- | :--- | :--- |
-| [Prefix Cache Aware Guide](https://gateway-api-inference-extension.sigs.k8s.io/performance/benchmark/advanced-configs/prefix-cache-aware/#prefix-cache-aware-benchmarking) | `prefix-cache-aware` | `benchamrking/prefix-cache-aware`  | `high-cache-values.yaml` `low-cache-values.yaml` |
-| [Decode Heavy Guide](https://gateway-api-inference-extension.sigs.k8s.io/performance/benchmark/advanced-configs/decode-heavy) | `benchamrking/single-workload`  | `decode-heavy-values.yaml` |
-| [Prefill Heavy Guide](https://gateway-api-inference-extension.sigs.k8s.io/performance/benchmark/advanced-configs/prefill-heavy) | `benchamrking/single-workload`  | `prefill-heavy-values.yaml` |
-| [Multilora Guide](https://gateway-api-inference-extension.sigs.k8s.io/performance/benchmark/advanced-configs/multilora-workload) | `benchamrking/multilora-workload`  | `multilora-values.yaml` |
+| Guide | Benchmarking Directory | Config File |
+| :--- | :--- | :--- |
+| [Prefix Cache Aware Guide](https://gateway-api-inference-extension.sigs.k8s.io/performance/benchmark/advanced-configs/prefix-cache-aware/#prefix-cache-aware-benchmarking) | `prefix-cache-aware`  | `short-questions__many-system-prompts-values.yaml`, <br> `long-questions__few-system-prompts-values.yaml`, <br> `short-questions__few-system-prompts__multi-chat-values.yaml`, <br> `long-questions__few-system-prompts__multi-chat-values.yaml` |
+| [Decode Heavy Guide](https://gateway-api-inference-extension.sigs.k8s.io/performance/benchmark/advanced-configs/decode-heavy-workload) | `single-workload`  | `decode-heavy-values.yaml` |
+| [Prefill Heavy Guide](https://gateway-api-inference-extension.sigs.k8s.io/performance/benchmark/advanced-configs/prefill-heavy-workload) | `single-workload`  | `prefill-heavy-values.yaml` |
+| [Multilora Guide](https://gateway-api-inference-extension.sigs.k8s.io/performance/benchmark/advanced-configs/multilora-workload) | `multilora-workload`  | `multilora-values.yaml` |
 
 ## Analyze the results
 
